@@ -1,0 +1,20 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "backend for trips website",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "eslint": "eslint .",
+    "prettier-check": "prettier --check .",
+    "prettier-format": "prettier --write ."
+},
+  "author": "Bartek Sadlej",
+  "license": "ISC",
+  "dependencies": {
+    "sequelize": "^6.20.1"
+  }
+}
