@@ -1,20 +1,38 @@
 {
-  "name": "backend",
-  "version": "1.0.0",
-  "description": "backend for trips website",
-  "main": "src/index.js",
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "eslint": "eslint .",
-    "prettier-check": "prettier --check .",
-    "prettier-format": "prettier --write ."
-},
-  "author": "Bartek Sadlej",
-  "license": "ISC",
-  "dependencies": {
-    "sequelize": "^6.20.1"
-  }
+    "name": "backend",
+    "version": "1.0.0",
+    "description": "backend for trips website",
+    "main": "src/index.mjs",
+    "scripts": {
+        "develop": "watch '(eslint strona/scripts/*.js && touch .js-ok) || rm .js-ok'",
+        "start": "nodemon strona/scripts/app.mjs",
+        "eslint": "eslint .",
+        "prettier-check": "prettier --check .",
+        "prettier-format": "prettier --write ."
+    },
+    "author": "Bartek Sadlej",
+    "license": "ISC",
+    "dependencies": {
+        "bcrypt": "^5.0.1",
+        "cors": "^2.8.5",
+        "crypto": "^1.0.1",
+        "express": "^4.18.1",
+        "express-session": "^1.17.3",
+        "express-validator": "^6.14.1",
+        "pg": "^8.7.3",
+        "sequelize": "^6.20.1"
+    },
+    "eslintConfig": {
+        "extends": [
+            "react-app",
+            "react-app/jest"
+        ]
+    },
+    "devDependencies": {
+        "eslint": "^8.16.0",
+        "eslint-config-airbnb-base": "^15.0.0",
+        "eslint-plugin-import": "^2.26.0",
+        "nodemon": "^2.0.15",
+        "prettier": "2.6.2"
+    }
 }

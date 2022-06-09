@@ -62,28 +62,28 @@ const Trips = database.define("Trips", {
 
 const Users = database.define("Users", {
     id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
-      primaryKey: true,
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
     },
     name: {
-      type: DataTypes.STRING,
-      allowNull: false,
+        type: DataTypes.STRING,
+        allowNull: false,
     },
     last_name: {
-      type: DataTypes.STRING,
-      allowNull: false,
+        type: DataTypes.STRING,
+        allowNull: false,
     },
     email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
     },
     password: {
-      type: DataTypes.STRING,
-      allowNull: false,
+        type: DataTypes.STRING,
+        allowNull: false,
     },
-  });
+});
 
 const Reservations = database.define("Reservations", {
     id: {
@@ -112,15 +112,15 @@ const Reservations = database.define("Reservations", {
 try {
     await database.authenticate();
     await Trips.sync({ force: true });
-    await Reservations.sync({force: true})
-    await Users.sync({force: true});
+    await Reservations.sync({ force: true });
+    await Users.sync({ force: true });
 
-   Trips.hasMany(Reservations, {
-       foreignKey: "myTripID"
-   });
-   Users.hasMany(Reservations, {
-       foreignKey: "myUserID"
-   });
+    Trips.hasMany(Reservations, {
+        foreignKey: "id",
+    });
+    Users.hasMany(Reservations, {
+        foreignKey: "id",
+    });
 } catch (err) {
     console.log(err);
 }
@@ -152,7 +152,6 @@ try {
     });
 
     await trip2.save();
-
 } catch (err) {
     console.log(err);
 }
