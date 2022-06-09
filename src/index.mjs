@@ -134,6 +134,7 @@ app.post(
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
         }
+
         const name = req.body.name;
         const last_name = req.body.last_name;
         const email = req.body.email;
@@ -150,9 +151,6 @@ app.post(
             });
 
             await new_user.save();
-
-            console.log("user created");
-            console.log(new_user);
 
             req.session.userid = new_user.id;
             req.session.name = name;
@@ -196,7 +194,7 @@ app.post(
                         { available_places: count },
                         { where: { id: tripId }, transaction: t }
                     );
-                    await Trips.save(t);
+                    // await Trips.save(t);
                     const reservation = await Reservations.build(
                         {
                             name: name,
@@ -220,6 +218,25 @@ app.post(
         res.end(JSON.stringify({ error: null }));
     }
 );
+
+app.get("/account", 
+async (req, res) => {
+    console.log(req.session);
+    const userId = req.session.userId;
+
+    try {
+        const user = await Users.findOne({
+            where : { id : userId}
+        });
+        const reservations = await user.getReservations();
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify({ reservations: reservations.json() }));
+        console.log(reservations);
+    } catch(err) {
+        console.log(err);
+    }
+});
+
 
 app.listen(port, () => {
     console.log(`app listens on port ${port}`);
