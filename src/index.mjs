@@ -21,7 +21,6 @@ app.use(
         credentials: true,
     })
 );
-// app.use(cors());
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -32,21 +31,9 @@ app.use(
         secret: "keyboard cat",
         resave: true,
         saveUninitialized: true,
-        cookie: { secure: false, maxAge: null },
+        cookie: { secure: false, maxAge: null, sameSite: "strict" },
     })
 );
-
-// app.use(
-//     session({
-//         resave: true,
-//         saveUninitialized: true,
-//         // eslint-disable-next-line no-unused-vars
-//         genid: function (_req) {
-//             return genuuid(); // use UUIDs for session IDs
-//         },
-//         secret: "keyboard cat",
-//     })
-// );
 
 app.use(function (req, res, next) {
     res.set("Access-Control-Allow-Origin", "http://localhost:3000");
@@ -78,6 +65,11 @@ app.get("/trips", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
+    if(req.session.userId == null) {
+        req.status = 404;
+        return;
+    }
+
     console.log("logout!");
     req.session.destroy();
 });
@@ -87,6 +79,11 @@ app.post(
     body("email").isEmail(),
     body("password").isLength({ min: 1 }),
     async (req, res) => {
+        if(req.session.userId != null) {
+            req.status = 404;
+            return;
+        }
+
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
@@ -107,7 +104,7 @@ app.post(
         }
         const match = password == user.password;
         if (match) {
-            req.session.userid = user.id;
+            req.session.userId = user.id;
             req.session.name = user.name;
             req.session.last_name = user.last_name;
             console.log(req.session);
@@ -130,9 +127,16 @@ app.post(
     body("email").isEmail(),
     body("password").isLength({ min: 1 }),
     async (req, res) => {
+
+        if(req.session.userId != null) {
+            req.status = 404;
+            return;
+        }
+
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
+            res.status(400).json({ errors: errors.array() });
+            return;
         }
 
         const name = req.body.name;
@@ -152,7 +156,7 @@ app.post(
 
             await new_user.save();
 
-            req.session.userid = new_user.id;
+            req.session.userId = new_user.id;
             req.session.name = name;
             req.session.last_name = last_name;
             req.session.email = email;
@@ -172,10 +176,17 @@ app.post(
     body("count").isInt(),
     body("tripId").isInt(),
     async (req, res) => {
+
+        if(req.session.userId == null) {
+            res.status=404;
+            return;
+        }
+
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-        }
+            res.status(400).json({ errors: errors.array() });
+            return;
+        } 
 
         const count = req.body.count;
         const tripId = req.body.tripId;
@@ -183,8 +194,6 @@ app.post(
         const name = req.session.name;
         const last_name = req.session.last_name;
         const email = req.session.email;
-        console.log(req.session);
-        console.log(name, last_name, email);
 
         try {
             await database.transaction(
@@ -194,7 +203,6 @@ app.post(
                         { available_places: count },
                         { where: { id: tripId }, transaction: t }
                     );
-                    // await Trips.save(t);
                     const reservation = await Reservations.build(
                         {
                             name: name,
@@ -219,24 +227,27 @@ app.post(
     }
 );
 
-app.get("/account", 
-async (req, res) => {
-    console.log(req.session);
+app.get("/account", async (req, res) => {
+
+    if (req.session.userId == null) {
+        res.status = 404;
+        return;
+    }
+
     const userId = req.session.userId;
 
     try {
         const user = await Users.findOne({
-            where : { id : userId}
+            where: { id: userId },
         });
         const reservations = await user.getReservations();
         res.setHeader("Content-Type", "application/json");
-        res.end(JSON.stringify({ reservations: reservations.json() }));
+        res.json({ reservations: reservations });
         console.log(reservations);
-    } catch(err) {
+    } catch (err) {
         console.log(err);
     }
 });
-
 
 app.listen(port, () => {
     console.log(`app listens on port ${port}`);
