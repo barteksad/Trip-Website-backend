@@ -65,7 +65,7 @@ app.get("/trips", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-    if(req.session.userId == null) {
+    if (req.session.userId == null) {
         req.status = 404;
         return;
     }
@@ -79,7 +79,7 @@ app.post(
     body("email").isEmail(),
     body("password").isLength({ min: 1 }),
     async (req, res) => {
-        if(req.session.userId != null) {
+        if (req.session.userId != null) {
             req.status = 404;
             return;
         }
@@ -127,8 +127,7 @@ app.post(
     body("email").isEmail(),
     body("password").isLength({ min: 1 }),
     async (req, res) => {
-
-        if(req.session.userId != null) {
+        if (req.session.userId != null) {
             req.status = 404;
             return;
         }
@@ -176,9 +175,8 @@ app.post(
     body("count").isInt(),
     body("tripId").isInt(),
     async (req, res) => {
-
-        if(req.session.userId == null) {
-            res.status=404;
+        if (req.session.userId == null) {
+            res.status = 404;
             return;
         }
 
@@ -186,7 +184,7 @@ app.post(
         if (!errors.isEmpty()) {
             res.status(400).json({ errors: errors.array() });
             return;
-        } 
+        }
 
         const count = req.body.count;
         const tripId = req.body.tripId;
@@ -228,7 +226,6 @@ app.post(
 );
 
 app.get("/account", async (req, res) => {
-
     if (req.session.userId == null) {
         res.status = 404;
         return;
