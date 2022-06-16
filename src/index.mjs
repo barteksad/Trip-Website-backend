@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-const { database, Trips, Reservations, Users } = await import("./database.mjs");
+const { database, Trip, Reservation, User } = await import("./database.mjs");
 
 import express from "express";
 import cors from "cors";
@@ -45,8 +45,8 @@ app.use(function (req, res, next) {
     next();
 });
 
-const getTrips = async () => {
-    let trips = await Trips.findAll({
+const getTrip = async () => {
+    let trip = await Trip.findAll({
         where: {
             begin_date: {
                 [Op.gt]: new Date(),
@@ -54,13 +54,13 @@ const getTrips = async () => {
         },
         order: [["begin_date", "ASC"]],
     });
-    return trips;
+    return trip;
 };
 
 app.get("/trips", (req, res) => {
-    getTrips().then((trips) => {
+    getTrip().then((trip) => {
         res.setHeader("Content-Type", "application/json");
-        res.end(JSON.stringify(trips));
+        res.end(JSON.stringify(trip));
     });
 });
 
@@ -94,7 +94,7 @@ app.post(
             .update(req.body.password)
             .digest("hex");
 
-        const user = await Users.findOne({ where: { email: email } });
+        const user = await User.findOne({ where: { email: email } });
         if (user == null) {
             res.setHeader("Content-Type", "application/json");
             res.end(
@@ -146,7 +146,7 @@ app.post(
             .digest("hex");
 
         try {
-            const new_user = await Users.create({
+            const new_user = await User.create({
                 name: name,
                 last_name: last_name,
                 email: email,
@@ -189,6 +189,7 @@ app.post(
         const count = req.body.count;
         const tripId = req.body.tripId;
 
+        const userId = req.session.userId   ;
         const name = req.session.name;
         const last_name = req.session.last_name;
         const email = req.session.email;
@@ -197,26 +198,35 @@ app.post(
             await database.transaction(
                 { isolationLevel: Transaction.ISOLATION_LEVELS.SERIALIZABLE },
                 async (t) => {
-                    await Trips.decrement(
+                    const trip = await Trip.findByPk(tripId);
+                    const user = await User.findByPk(userId);
+                    await trip.decrement(
                         { available_places: count },
-                        { where: { id: tripId }, transaction: t }
+                        { transaction: t }
                     );
-                    const reservation = await Reservations.build(
+                    const reservation = await Reservation.create(
                         {
                             name: name,
                             last_name: last_name,
                             email: email,
                             number_of_seats: count,
                         },
-                        { transaction: t }
+                        { transaction: t}
                     );
+                    await user.addReservation(reservation);
+                    await trip.addReservation(reservation);
+                    await reservation.setTrip(trip);
+                    await reservation.setUser(user);
+                    console.log(reservation);
                     await reservation.save(t);
+                    await trip.save(t);
+                    await user.save(t);
                 }
             );
         } catch (err) {
             console.log(err);
             res.setHeader("Content-Type", "application/json");
-            res.end(JSON.stringify({ error: "Not enough available places!" }));
+            res.end(JSON.stringify({ error: err.toString() }));
             return;
         }
 
@@ -234,13 +244,15 @@ app.get("/account", async (req, res) => {
     const userId = req.session.userId;
 
     try {
-        const user = await Users.findOne({
-            where: { id: userId },
-        });
+        const user = await User.findByPk(userId);
         const reservations = await user.getReservations();
+        console.log(user);
+        console.log(reservations);
+        // const trip_ids = await reservation[0].getTrip();
+        const trip_ids = await Promise.all(reservations.map(async (r) => (await r.getTrip()).id));
         res.setHeader("Content-Type", "application/json");
         res.json({ reservations: reservations });
-        console.log(reservations);
+        console.log(trip_ids);
     } catch (err) {
         console.log(err);
     }

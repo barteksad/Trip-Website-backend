@@ -8,7 +8,7 @@ const database = new Sequelize("bd", "bs429589", "iks", {
     dialect: "postgres",
 });
 
-const Trips = database.define("Trips", {
+const Trip = database.define("Trip", {
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
@@ -22,9 +22,7 @@ const Trips = database.define("Trips", {
     description: {
         type: DataTypes.STRING,
     },
-    short_description: {
-        type: DataTypes.STRING,
-    },
+    short_description: { type: DataTypes.STRING, },
     image: {
         type: DataTypes.STRING,
     },
@@ -60,7 +58,7 @@ const Trips = database.define("Trips", {
     },
 });
 
-const Users = database.define("Users", {
+const User = database.define("User", {
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
@@ -85,7 +83,7 @@ const Users = database.define("Users", {
     },
 });
 
-const Reservations = database.define("Reservations", {
+const Reservation = database.define("Reservation", {
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
@@ -110,23 +108,29 @@ const Reservations = database.define("Reservations", {
 });
 
 try {
-    await database.authenticate();
-    await Trips.sync({ force: true });
-    await Reservations.sync({ force: true });
-    await Users.sync({ force: true });
+    Trip.hasMany(Reservation, {
+        foreignKey: "id",
+    });
+    User.hasMany(Reservation, {
+        foreignKey: "id",
+    }); 
+    Reservation.belongsTo(Trip, {
+        foreignKey: "id",
+    });
+    Reservation.belongsTo(User, {
+        foreignKey: "id",
+    });
 
-    Trips.hasMany(Reservations, {
-        foreignKey: "id",
-    });
-    Users.hasMany(Reservations, {
-        foreignKey: "id",
-    });
+    await database.authenticate();
+    await Trip.sync({ force: true });
+    await Reservation.sync({ force: true });
+    await User.sync({ force: true });
 } catch (err) {
     console.log(err);
 }
 
 try {
-    const trip1 = await Trips.build({
+    const trip1 = await Trip.build({
         id: 0,
         name: "Szczyt wszystkiego",
         description: "krótka wycieczka z wejściem na ten właśnie szczyt",
@@ -140,7 +144,7 @@ try {
 
     await trip1.save();
 
-    const trip2 = await Trips.build({
+    const trip2 = await Trip.build({
         name: "Dalekie morze",
         description: "bardzo ciekawa wycieczka do dalekich mórz",
         short_description: "nad morze!",
@@ -156,4 +160,4 @@ try {
     console.log(err);
 }
 
-export { database, Trips, Reservations, Users };
+export { database, Trip, Reservation, User };
