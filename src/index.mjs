@@ -25,7 +25,7 @@ app.use(
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-app.set("trust proxy");
+app.set("trust proxy", 1);
 app.use(
     session({
         secret: "keyboard cat",
@@ -34,16 +34,6 @@ app.use(
         cookie: { secure: false, maxAge: null, sameSite: "strict" },
     })
 );
-
-app.use(function (req, res, next) {
-    res.set("Access-Control-Allow-Origin", "http://localhost:3000");
-    res.set("Access-Control-Allow-Credentials", true);
-    res.set(
-        "Access-Control-Allow-Headers",
-        "Origin, X-Requested-With, Content-Type, Accept"
-    );
-    next();
-});
 
 const getTrip = async () => {
     let trip = await Trip.findAll({
@@ -98,7 +88,7 @@ app.post(
         if (user == null) {
             res.setHeader("Content-Type", "application/json");
             res.end(
-                JSON.stringify({ userId: null, error: "Invalid password!" })
+                JSON.stringify({ loggedIn: false, error: "Invalid password!" })
             );
             return;
         }
@@ -107,14 +97,15 @@ app.post(
             req.session.userId = user.id;
             req.session.name = user.name;
             req.session.last_name = user.last_name;
+            req.session.email = user.email;
             console.log(req.session);
 
             res.set("Content-Type", "application/json");
-            res.end(JSON.stringify({ userId: user.id }));
+            res.end(JSON.stringify({ loggedIn: true }));
         } else {
             res.setHeader("Content-Type", "application/json");
             res.end(
-                JSON.stringify({ userId: null, error: "Invalid password!" })
+                JSON.stringify({ loggedIn: false, error: "Invalid password!" })
             );
         }
     }
@@ -166,7 +157,7 @@ app.post(
             res.end(JSON.stringify({ userId: new_user.id }));
         } catch (e) {
             res.setHeader("Content-Type", "application/json");
-            res.end(JSON.stringify({ userId: null, error: "Database error!" }));
+            res.end(JSON.stringify({ userId: null, error: e.message }));
         }
     }
 );
@@ -201,6 +192,10 @@ app.post(
                 async (t) => {
                     const trip = await Trip.findByPk(tripId);
                     const user = await User.findByPk(userId);
+                    if (trip.available_places - count < 0) {
+                        t.rollback();
+                        throw new Error("Not enought places!");
+                    }
                     await trip.decrement(
                         { available_places: count },
                         { transaction: t }
@@ -249,7 +244,7 @@ app.get("/account", async (req, res) => {
         console.log(user);
         console.log(reservations);
         res.setHeader("Content-Type", "application/json");
-        res.json({ reservations: reservations });
+        res.json({ reservations });
     } catch (err) {
         console.log(err);
     }

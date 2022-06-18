@@ -65,7 +65,19 @@ const User = database.define("User", {
     email: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true,
+        validate: {
+            isUnique(value) {
+                return User.findOne({ where: { email: value } }).then(
+                    (email) => {
+                        if (email) {
+                            throw new Error(
+                                "Account with this email already exists!"
+                            );
+                        }
+                    }
+                );
+            },
+        },
     },
     password: {
         type: DataTypes.STRING,
