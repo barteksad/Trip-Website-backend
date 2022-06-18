@@ -9,11 +9,6 @@ const database = new Sequelize("bd", "bs429589", "iks", {
 });
 
 const Trip = database.define("Trip", {
-    id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
-        primaryKey: true,
-    },
     name: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -22,7 +17,7 @@ const Trip = database.define("Trip", {
     description: {
         type: DataTypes.STRING,
     },
-    short_description: { type: DataTypes.STRING, },
+    short_description: { type: DataTypes.STRING },
     image: {
         type: DataTypes.STRING,
     },
@@ -59,11 +54,6 @@ const Trip = database.define("Trip", {
 });
 
 const User = database.define("User", {
-    id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
-        primaryKey: true,
-    },
     name: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -84,11 +74,6 @@ const User = database.define("User", {
 });
 
 const Reservation = database.define("Reservation", {
-    id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
-        primaryKey: true,
-    },
     name: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -108,20 +93,13 @@ const Reservation = database.define("Reservation", {
 });
 
 try {
-    Trip.hasMany(Reservation, {
-        foreignKey: "id",
-    });
-    User.hasMany(Reservation, {
-        foreignKey: "id",
-    }); 
-    Reservation.belongsTo(Trip, {
-        foreignKey: "id",
-    });
-    Reservation.belongsTo(User, {
-        foreignKey: "id",
-    });
-
     await database.authenticate();
+
+    Trip.hasMany(Reservation);
+    User.hasMany(Reservation);
+    Reservation.belongsTo(Trip);
+    Reservation.belongsTo(User);
+
     await Trip.sync({ force: true });
     await Reservation.sync({ force: true });
     await User.sync({ force: true });

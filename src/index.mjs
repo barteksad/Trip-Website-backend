@@ -154,6 +154,7 @@ app.post(
             });
 
             await new_user.save();
+            console.log(new_user);
 
             req.session.userId = new_user.id;
             req.session.name = name;
@@ -189,7 +190,7 @@ app.post(
         const count = req.body.count;
         const tripId = req.body.tripId;
 
-        const userId = req.session.userId   ;
+        const userId = req.session.userId;
         const name = req.session.name;
         const last_name = req.session.last_name;
         const email = req.session.email;
@@ -211,13 +212,12 @@ app.post(
                             email: email,
                             number_of_seats: count,
                         },
-                        { transaction: t}
+                        { transaction: t }
                     );
-                    await user.addReservation(reservation);
-                    await trip.addReservation(reservation);
-                    await reservation.setTrip(trip);
-                    await reservation.setUser(user);
-                    console.log(reservation);
+                    await user.addReservation(reservation, { transaction: t });
+                    await trip.addReservation(reservation, { transaction: t });
+                    await reservation.setTrip(trip, { transaction: t });
+                    await reservation.setUser(user, { transaction: t });
                     await reservation.save(t);
                     await trip.save(t);
                     await user.save(t);
@@ -244,15 +244,12 @@ app.get("/account", async (req, res) => {
     const userId = req.session.userId;
 
     try {
-        const user = await User.findByPk(userId);
-        const reservations = await user.getReservations();
+        const user = await User.findByPk(userId, { include: Reservation });
+        const reservations = await user.getReservations({ nest: true });
         console.log(user);
         console.log(reservations);
-        // const trip_ids = await reservation[0].getTrip();
-        const trip_ids = await Promise.all(reservations.map(async (r) => (await r.getTrip()).id));
         res.setHeader("Content-Type", "application/json");
         res.json({ reservations: reservations });
-        console.log(trip_ids);
     } catch (err) {
         console.log(err);
     }
