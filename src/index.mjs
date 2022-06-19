@@ -1,14 +1,12 @@
-// eslint-disable-next-line no-unused-vars
 const { database, Trip, Reservation, User } = await import("./database.mjs");
-
-import express from "express";
-import cors from "cors";
-import { Op, Transaction } from "sequelize";
-import bodyParser from "body-parser";
-import { body, validationResult } from "express-validator";
-import session from "express-session";
-
 const { createHmac } = await import("node:crypto");
+
+import bodyParser from "body-parser";
+import cors from "cors";
+import express from "express";
+import session from "express-session";
+import { body, validationResult } from "express-validator";
+import { Op, Transaction } from "sequelize";
 
 const app = express();
 const port = 3333;
@@ -56,12 +54,12 @@ app.get("/trips", (req, res) => {
 
 app.post("/logout", (req, res) => {
     if (req.session.userId == null) {
-        req.status = 404;
-        return;
+        res.status(404);
+    } else {
+        req.session.destroy();
+        res.status(200);
     }
-
-    console.log("logout!");
-    req.session.destroy();
+    res.send();
 });
 
 app.post(
@@ -70,7 +68,7 @@ app.post(
     body("password").isLength({ min: 1 }),
     async (req, res) => {
         if (req.session.userId != null) {
-            req.status = 404;
+            res.status(404).send("User already logged in!");
             return;
         }
 
@@ -119,7 +117,7 @@ app.post(
     body("password").isLength({ min: 1 }),
     async (req, res) => {
         if (req.session.userId != null) {
-            req.status = 404;
+            res.status(404).send("User already signed in!");
             return;
         }
 
@@ -168,7 +166,7 @@ app.post(
     body("tripId").isInt(),
     async (req, res) => {
         if (req.session.userId == null) {
-            res.status = 404;
+            res.status(404).send("User not logged in!");
             return;
         }
 
@@ -232,7 +230,7 @@ app.post(
 
 app.get("/account", async (req, res) => {
     if (req.session.userId == null) {
-        res.status = 404;
+        res.status(404).send("User not logged in!");
         return;
     }
 
@@ -241,8 +239,6 @@ app.get("/account", async (req, res) => {
     try {
         const user = await User.findByPk(userId, { include: Reservation });
         const reservations = await user.getReservations({ nest: true });
-        console.log(user);
-        console.log(reservations);
         res.setHeader("Content-Type", "application/json");
         res.json({ reservations });
     } catch (err) {

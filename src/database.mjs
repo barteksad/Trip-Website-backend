@@ -112,9 +112,9 @@ try {
     Reservation.belongsTo(Trip);
     Reservation.belongsTo(User);
 
+    await User.sync({ force: true });
     await Trip.sync({ force: true });
     await Reservation.sync({ force: true });
-    await User.sync({ force: true });
 } catch (err) {
     console.log(err);
 }
