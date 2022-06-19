@@ -146,6 +146,19 @@ try {
     });
 
     await trip2.save();
+
+    const trip3 = await Trip.build({
+        name: "Magiczna kraina",
+        description: "wyprawa do tej właśnie krainy",
+        short_description: "spróbuj już dziś",
+        image: "https://4rooms.com.pl/environment/cache/images/500_500_productGfx_1279cded36c5a39ffac5a8b86ffa654c.jpg",
+        price: 2030,
+        begin_date: new Date("2022.08.05"),
+        end_date: new Date("2022.09.17"),
+        available_places: 49,
+    });
+
+    await trip3.save();
 } catch (err) {
     console.log(err);
 }
