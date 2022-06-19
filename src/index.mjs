@@ -82,9 +82,10 @@ app.post(
             .update(req.body.password)
             .digest("hex");
 
+        res.setHeader("Content-Type", "application/json");
+
         const user = await User.findOne({ where: { email: email } });
         if (user == null) {
-            res.setHeader("Content-Type", "application/json");
             res.end(
                 JSON.stringify({ loggedIn: false, error: "Invalid password!" })
             );
@@ -98,10 +99,8 @@ app.post(
             req.session.email = user.email;
             console.log(req.session);
 
-            res.set("Content-Type", "application/json");
             res.end(JSON.stringify({ loggedIn: true }));
         } else {
-            res.setHeader("Content-Type", "application/json");
             res.end(
                 JSON.stringify({ loggedIn: false, error: "Invalid password!" })
             );
@@ -134,6 +133,8 @@ app.post(
             .update(req.body.password)
             .digest("hex");
 
+        res.setHeader("Content-Type", "application/json");
+
         try {
             const new_user = await User.create({
                 name: name,
@@ -143,18 +144,14 @@ app.post(
             });
 
             await new_user.save();
-            console.log(new_user);
 
             req.session.userId = new_user.id;
             req.session.name = name;
             req.session.last_name = last_name;
             req.session.email = email;
-            console.log(req.session);
 
-            res.setHeader("Content-Type", "application/json");
             res.end(JSON.stringify({ userId: new_user.id }));
         } catch (e) {
-            res.setHeader("Content-Type", "application/json");
             res.end(JSON.stringify({ userId: null, error: e.message }));
         }
     }
@@ -183,6 +180,8 @@ app.post(
         const name = req.session.name;
         const last_name = req.session.last_name;
         const email = req.session.email;
+
+        res.setHeader("Content-Type", "application/json");
 
         try {
             await database.transaction(
@@ -218,12 +217,9 @@ app.post(
             );
         } catch (err) {
             console.log(err);
-            res.setHeader("Content-Type", "application/json");
             res.end(JSON.stringify({ error: err.toString() }));
             return;
         }
-
-        res.setHeader("Content-Type", "application/json");
         res.end(JSON.stringify({ error: null }));
     }
 );
